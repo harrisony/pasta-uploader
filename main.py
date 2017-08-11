@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 import code
 
 import os
@@ -71,8 +72,8 @@ class PASTA(object):
         return tasks
 
 
-    def submit_submission(self, task_id, filen="pasta_submission.zip"):
-        r = self.s.post(self.base_url + '/home/', files={"file": open(filen, 'rb')}, data={'assessment' : task_id, '_groupSubmission': 'on'})
+    def submit_submission(self, task_id, path="pasta_submission.zip"):
+        r = self.s.post(self.base_url + '/home/', files={"file": open(path, 'rb')}, data={'assessment' : task_id, '_groupSubmission': 'on'})
         return
 
 
@@ -87,7 +88,7 @@ def tasks(args):
 
 def submit(args):
     pasta = PASTA(**vars(args))
-    pasta.submit_submission(args.task_id)
+    pasta.submit_submission(args.task_id, args.path)
 
 
 if __name__ == '__main__':
@@ -110,7 +111,7 @@ if __name__ == '__main__':
     s = subparsers.add_parser("submit", help="Are you crazy?")
     s.set_defaults(func=submit)
     s.add_argument('task_id' , action='store')
-    s.add_argument('--path' , action=FullPaths, default=os.path.join(os.getcwd(), 'pasta_submission'))
+    s.add_argument('--path' , action=FullPaths, default=os.path.join(os.getcwd(), 'pasta_submission.zip'))
 
     args = parser.parse_args()
 
