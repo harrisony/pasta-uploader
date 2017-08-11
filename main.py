@@ -74,7 +74,7 @@ class PASTA(object):
 
     def submit_submission(self, task_id, path="pasta_submission.zip"):
         r = self.s.post(self.base_url + '/home/', files={"file": open(path, 'rb')}, data={'assessment' : task_id, '_groupSubmission': 'on'})
-        return
+        print("Submitting {} as {}".format(path, task_id))
 
 
 def shell(args):
