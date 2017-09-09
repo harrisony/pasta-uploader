@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Useful Ant build script to generate a zip file -->
+<project name="PASTA Week X" default="Submit to PASTA">
+    <target name="Submit Easy Task">
+        <property name="pasta.id" value="1"/>
+        <antcall target="Submit to PASTA"/>
+    </target>
+
+    <target name="Submit Medium Task">
+        <property name="pasta.id" value="2"/>
+        <antcall target="Submit to PASTA"/>
+    </target>
+
+    <target name="Submit Hard Task">
+        <property name="pasta.id" value="3"/>
+        <antcall target="Submit to PASTA"/>
+    </target>
+
+    <target name="PASTAzip" description="Create zip archive for PASTA submission">
+        <zip destfile="pasta_submission.zip">
+            <zipfileset dir="src" prefix="src"/>
+        </zip>
+    </target>
+    <target name="Submit to PASTA" description="Submits task to PASTA">
+        <antcall target="PASTAzip"/>
+        <input message="PASTA assignment ID" addproperty="pasta.id"/>
+        <exec executable="~/.local/pasta-uploader/main.py">
+            <arg line="submit ${pasta.id}"/>
+        </exec>
+    </target>
+</project>
