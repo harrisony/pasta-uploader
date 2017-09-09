@@ -29,8 +29,19 @@ class PASTA(object):
 
         self.login(kwargs['username'], kwargs['password'])
 
-    def _strip_submit(self, text):
-        return re.match(r"submitAssessment\('(.*?)'\);", text).groups()[0]
+    def _parse_task_details(self, task):
+        button = task.find(class_='button-panel').button['onclick']
+        if 'closedAssessment' in task.find(class_='button-panel').parent['class']:
+            details = dict()
+            details['p_id'] = re.match(r"location.href='../info/(\d+)/'", button).groups()[0]
+            details['p_due'] = None
+            details['submissions'] = False
+            return details
+        else:
+            rematch = re.match(r"submitAssessment\('(.*)', '(.*)',.*\);", button).groups()
+            details = dict(zip(('p_id', 'p_due'), rematch))
+            details['submissions'] = True
+            return details
 
     def login(self, unikey=None, password=None):
         payload = {'unikey': unikey,
@@ -46,7 +57,7 @@ class PASTA(object):
     def retrieve_tasks(self):
         ##TODO: something something, ensure you're logged in
         r = self.s.get(self.base_url + '/home/')
-        self._soup = BeautifulSoup(r.text)
+        self._soup = BeautifulSoup(r.text, "html.parser")
         sections_soup = self._soup.findAll('div', class_='section')
         tasks = []
 
@@ -61,11 +72,7 @@ class PASTA(object):
                     k,v = tuple(" ".join(splitted) for splitted in (map(str.split, iboxitem.stripped_strings)))
                     task_dict[k.lower().strip(':')] = v
 
-                ## submitAssessment
-                submit_assessment_details = re.match(r"submitAssessment\('(.*)', '(.*)',.*\);", task.find(class_='button-panel').button['onclick']).groups()
-                task_dict.update(dict(zip(('p_id', 'p_due'), submit_assessment_details)))
-
-
+                task_dict.update(self._parse_task_details(task))
                 tasks.append(task_dict)
 
 
@@ -73,8 +80,9 @@ class PASTA(object):
 
 
     def submit_submission(self, task_id, path="pasta_submission.zip"):
+        t = {task['p_id']: task['name'] for task in self.retrieve_tasks()}
         r = self.s.post(self.base_url + '/home/', files={"file": open(path, 'rb')}, data={'assessment' : task_id, '_groupSubmission': 'on'})
-        print("Submitting {} as {}".format(path, task_id))
+        print("Submitting {} to {}".format(path, t[task_id]))
 
 
 def shell(args):
