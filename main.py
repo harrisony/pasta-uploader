@@ -7,7 +7,7 @@ from bs4 import BeautifulSoup
 import re
 import getpass
 import argparse
-
+import logging
 
 # props to https://gist.github.com/brantfaircloth/1443543
 class FullPaths(argparse.Action):
@@ -26,7 +26,7 @@ class PASTA(object):
     MASTERS = 'http://soit-app-pro-14.ucc.usyd.edu.au:8080/PASTA/' # Has a different layout, suspect it's running an older version
     def __init__(self, **kwargs):
         self.s = requests.Session()
-        self.base_url = kwargs['site']
+        self.base_url = kwargs['course']
         self.logged_in = False
         # for debuggging onyl
         self._soup = None
@@ -52,6 +52,7 @@ class PASTA(object):
                    'password': password,
                    'Submit': ''}
         r = self.s.post(self.base_url + '/login/', data=payload)
+        logging.debug('logging into %s' % self.base_url)
         if r.url.endswith('/login'):
             raise Exception('login failed')
         self.logged_in = True
@@ -86,6 +87,7 @@ class PASTA(object):
     def submit_submission(self, task_id, path="pasta_submission.zip"):
         t = {task['p_id']: task['name'] for task in self.retrieve_tasks()}
         r = self.s.post(self.base_url + '/home/', files={"file": open(path, 'rb')}, data={'assessment' : task_id, '_groupSubmission': 'on'})
+        logging.debug('Submitted %s %s' % (task_id, r))
         print("Submitting {} to {}".format(path, t[task_id]))
 
 
@@ -107,7 +109,8 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(prog='pasta-uploader')
     parser.add_argument("-u", "--username", default=None)
     parser.add_argument("-p", "--password", default=None)
-    parser.add_argument("-s", "--site", default=PASTA.INFO3504)
+    parser.add_argument("-c", "--course", default=PASTA.INFO3504)
+    parser.add_argument("-v", "--verbose", action='store_true')
 
 
     subparsers = parser.add_subparsers(dest="command", help="commands")
@@ -127,7 +130,10 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
 
-    netrc = requests.utils.get_netrc_auth(args.site)
+    if args.verbose:
+        logging.basicConfig(level=logging.DEBUG)
+
+    netrc = requests.utils.get_netrc_auth(args.course)
 
     if netrc:
         args.username, args.password = netrc
