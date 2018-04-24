@@ -19,12 +19,12 @@ class FullPaths(argparse.Action):
 
 class PASTA(object):
     # since every ~man~ course and their dog has it's own instance
-    INFO1103 = 'http://soit-app-pro-2.ucc.usyd.edu.au:8080/PASTA/'
-    DATA3404 = 'https://soit-app-pro-9.ucc.usyd.edu.au:8443/PASTA/'
-    COMP3221 = 'https://soit-app-pro-10.ucc.usyd.edu.au:8443/PASTA/'
-    COMP3308 = 'https://comp3308.it.usyd.edu.au/PASTA/'
-    SANDBOX = 'http://soit-app-pro-12.ucc.usyd.edu.au:8080/PASTA/'
-    MASTERS = 'http://soit-app-pro-14.ucc.usyd.edu.au:8080/PASTA/' # Has a different layout, suspect it's running an older version
+    INFO1103 = 'http://soit-app-pro-2.ucc.usyd.edu.au:8080/PASTA/' # v2-2017
+    DATA3404 = 'https://soit-app-pro-9.ucc.usyd.edu.au:8443/PASTA/' # v2-2017
+    COMP3221 = 'https://soit-app-pro-10.ucc.usyd.edu.au:8443/PASTA/' #v2-2017
+    COMP3308 = 'https://comp3308.it.usyd.edu.au/PASTA/' # v3-2018
+    SANDBOX = 'http://soit-app-pro-12.ucc.usyd.edu.au:8080/PASTA/'  #v2-2017
+    MASTERS = 'http://soit-app-pro-14.ucc.usyd.edu.au:8080/PASTA/' # Vintage: Has a different layout, suspect it's running an older version
     def __init__(self, **kwargs):
         self.s = requests.Session()
         self.base_url = kwargs['course']
