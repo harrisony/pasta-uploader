@@ -29,24 +29,33 @@ class PASTA(object):
         self.s = requests.Session()
         self.base_url = kwargs['course']
         self.logged_in = False
+        self.version = None
         # for debuggging onyl
         self._soup = None
 
         self.login(kwargs['username'], kwargs['password'])
 
     def _parse_task_details(self, task):
-        button = task.find(class_='button-panel').button['onclick']
-        if 'closedAssessment' in task.find(class_='button-panel').parent['class']:
+        if self.version == 3:
+            # this is fiddly. Ideally I would have access to a PASTA 2 site to write a better finder
+            uploadb = task.find('button', attrs={'data-hbn-icon': 'fa-upload'})
+            infob = task.find('button', attrs={'data-hbn-icon': 'fa-info'})
+            button = (uploadb or infob)['onclick']
+            closed = 'closedAssessment' in task['class']
+        else:
+            button = [x['onclick'] for x in task.find(class_='button-panel').find_all('button')][1]
+            closed = 'closedAssessment' in task.find(class_='button-panel').parent['class']
+        if closed:
             details = dict()
             details['p_id'] = re.match(r"location.href='../info/(\d+)/'", button).groups()[0]
             details['p_due'] = None
             details['submissions'] = False
-            return details
         else:
             rematch = re.match(r"submitAssessment\('(.*)', '(.*)',.*\);", button).groups()
             details = dict(zip(('p_id', 'p_due'), rematch))
             details['submissions'] = True
-            return details
+        logging.debug(details)
+        return details
 
     def login(self, unikey=None, password=None):
         payload = {'unikey': unikey,
@@ -57,6 +66,8 @@ class PASTA(object):
         if r.url.endswith('/login'):
             raise Exception('login failed')
         self.logged_in = True
+        self._soup = BeautifulSoup(r.text, "html.parser")
+        self.version = int(self._soup.find('link', rel='stylesheet', href=re.compile(r'\?v\=\d$'))['href'][-1]) #Lets be honest, by the time pasta hits version 10, I shouldn't be at uni
 
 
 
@@ -93,7 +104,7 @@ class PASTA(object):
 
 
 def shell(args):
-    ed = PASTA(**vars(args))
+    pasta = PASTA(**vars(args))
     code.interact(local=locals())
 
 def tasks(args):
